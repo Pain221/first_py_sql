@@ -31,6 +31,5 @@ def Collecting_data():
         sys.exc_info()
         print('ошибка!')
         
-
-request_list=Request_data()
+Request_data()
 Collecting_data()
