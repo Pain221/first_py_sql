@@ -4,15 +4,18 @@ import datetime
 conn=psycopg2.connect("dbname=komunalka user=postgres password=123")
 cursor=conn.cursor()
 
+#Запрос данных, GVS - горячая вода, HVS - холодная, EE - электроэнергия
 def Request_data():  
     global HVS_device, GVS_device, EE_device, number_LS, request_date
-    number_LS=int(input('Введите ваш номер лицевого счета'))
+    number_LS=int(input('Введите ваш номер лицевого счета: '))
     number_of_residents=input('введите количество проживающих в помещении')
     request_date=datetime.date.today()
     HVS_device=input('есть ли у вас прибор учета ХВС?(введите ДА или НЕТ)')
     GVS_device=input('есть ли у вас прибор учета ГВС?(введите ДА или НЕТ)')
     EE_device=input('есть ли у вас прибор учета ЭЭ?(введите ДА или НЕТ)')
     return number_LS,request_date
+
+#сбор показаний счетчиков и занесение в базу
 def Collecting_data():
     try:
         if HVS_device=='ДА' and GVS_device=='ДА' and EE_device=='ДА':
