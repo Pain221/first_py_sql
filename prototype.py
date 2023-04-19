@@ -90,6 +90,7 @@ def Number_residents(number_LS):
         print('ошибка!')
 
 Request_data()
+database_record(number_LS,request_date)
 Collecting_data()
 
 cursor.close()
