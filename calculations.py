@@ -16,14 +16,15 @@ def database_record_accrual(number_LS,request_date):
     cursor.execute("""INSERT INTO Accruals (number_ls, accrual_date) VALUES (%s, %s);""",(number_LS, request_date))
 
 #определяет какие функции выполнять
-def Execute_calculations(HVS_device, indications_HVS, GVS_device, number_of_residents, number_LS,request_date):
+def Execute_calculations(HVS_device, indications_HVS, GVS_device,indications_GVS, number_of_residents, number_LS,request_date):
     if HVS_device == 'НЕТ':
         HVS_without_device(number_of_residents, number_LS, request_date)
     if HVS_device == 'ДА':
         HVS_with_device(number_LS, request_date, indications_HVS)
     if GVS_device=='НЕТ':
         GVS_heat_carrier_without_device(number_LS, request_date, number_of_residents)
-    #место для гвс со счетчиком
+    if GVS_device == 'ДА':
+        GVS_heat_carrier_with_device(number_LS, request_date,indications_GVS)
     GVS_thermal_energy(number_LS, request_date, number_of_residents, volume_of_consumption_GVS_heat_carrier)
 
 #начисления за ХВС без счётчика
@@ -66,6 +67,21 @@ def GVS_heat_carrier_without_device(number_LS, request_date, number_of_residents
         print('ошибка!')
         print(e) 
 
+#начисления за ГВС Теплоноситель со счётчиком
+def GVS_heat_carrier_with_device(number_LS, request_date,indications_GVS):
+    global volume_of_consumption_GVS_heat_carrier #
+    volume_of_consumption_GVS_heat_carrier = indications_GVS
+    accrual=volume_of_consumption_GVS_heat_carrier*standard_frame['tariff(rub/unit_of_measurement)'][1]
+    try:
+        cursor.execute("""UPDATE Accruals SET accrual_gvs_heat_carrier=%s WHERE number_LS=%s and accrual_date=%s;""",(accrual, number_LS, request_date))
+        conn.commit()
+        print('Начисления за ГВС Теплоноситель вычислены:', accrual, 'рублей!')
+    except Exception as e:
+        conn.rollback()
+        print('ошибка!')
+        print(e) 
+
+
 #начисления за ГВС Тепловая энергия
 def GVS_thermal_energy(number_LS, request_date, number_of_residents, volume_of_consumption_GVS_heat_carrier):
     volume_of_consumption=volume_of_consumption_GVS_heat_carrier*standard_frame['standard'][6]
@@ -87,6 +103,6 @@ def EE_without_device(number_LS, request_date, number_of_residents):
 
 #главная функция для main
 def activate_calculations():
-    from prototype import number_of_residents, HVS_device, number_LS, request_date, GVS_device, indications_HVS
+    from prototype import number_of_residents, HVS_device, number_LS, request_date, GVS_device, indications_HVS, indications_GVS
     database_record_accrual(number_LS,request_date)
-    Execute_calculations(HVS_device, indications_HVS, GVS_device, number_of_residents, number_LS,request_date)
+    Execute_calculations(HVS_device, indications_HVS, GVS_device, indications_GVS, number_of_residents, number_LS,request_date)
