@@ -48,6 +48,7 @@ def Collecting_HVS(number_LS, request_date):
 
 #собирает показания ГВС
 def Collecting_GVS(number_LS, request_date):
+    global indications_GVS
     try:
         indications_GVS=int(input('Введите показания ГВС: '))
         cursor.execute("""UPDATE Customers SET indications_gvs=%s WHERE number_LS=%s and indications_date=%s;""",(indications_GVS, number_LS, request_date))
@@ -98,7 +99,7 @@ def Number_residents(number_LS):
         conn.rollback()
         print('ошибка!')
         print(e)
-        
+
 #главная функция для main
 def activation():
     Request_data()
