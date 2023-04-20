@@ -7,6 +7,7 @@ cursor=conn.cursor()
 
 #Запрос данных, GVS - горячая вода, HVS - холодная, EE - электроэнергия
 def Request_data():  
+    print('НАЧИНАЮ СБОР ДАННЫХ') # для проверки
     global HVS_device, GVS_device, EE_device, number_LS, request_date, condition_of_residents
     number_LS=int(input('Введите ваш номер лицевого счета: '))
     condition_of_residents=input('Количество проживающих менялось?(Введите ДА или НЕТ, если заполняете впервые - введие ДА)')
@@ -35,6 +36,7 @@ def Collecting_data():
 
 #собирает показания ХВС
 def Collecting_HVS(number_LS, request_date):
+    global indications_HVS
     try:
         indications_HVS=int(input('Введите показания ХВС: '))
         cursor.execute("""UPDATE Customers SET indications_hvs=%s WHERE number_LS=%s and indications_date=%s;""",(indications_HVS, number_LS, request_date))
@@ -47,7 +49,7 @@ def Collecting_HVS(number_LS, request_date):
 #собирает показания ГВС
 def Collecting_GVS(number_LS, request_date):
     try:
-        indications_GVS=int(input('Введите показания ХВС: '))
+        indications_GVS=int(input('Введите показания ГВС: '))
         cursor.execute("""UPDATE Customers SET indications_gvs=%s WHERE number_LS=%s and indications_date=%s;""",(indications_GVS, number_LS, request_date))
         conn.commit()
         print('Показания внесены!')
@@ -58,8 +60,12 @@ def Collecting_GVS(number_LS, request_date):
 #Cобирает показания ЭЭ
 def Collecting_EE(number_LS, request_date):
     try:
-        indications_EE=int(input('Введите показания ХВС: '))
-        cursor.execute("""UPDATE Customers SET indications_ee=%s WHERE number_LS=%s and indications_date=%s;""",(indications_EE, number_LS, request_date))
+        indications_EE_daytime=int(input('Введите показания ЭЭ с дневной шкалы: '))
+        cursor.execute("""UPDATE Customers SET indications_ee_daytime=%s WHERE number_LS=%s and indications_date=%s;""",(indications_EE_daytime, number_LS, request_date))
+        conn.commit()
+        print('Показания внесены!')
+        indications_EE_night=int(input('Введите показания ЭЭ с ночной шкалы: '))
+        cursor.execute("""UPDATE Customers SET indications_ee_night=%s WHERE number_LS=%s and indications_date=%s;""",(indications_EE_night, number_LS, request_date))
         conn.commit()
         print('Показания внесены!')
     except Exception:
@@ -68,6 +74,7 @@ def Collecting_EE(number_LS, request_date):
 
 #собирает количество жильцов
 def Collecting_number_of_residents(number_LS, request_date):
+    global number_of_residents
     try:
         number_of_residents=int(input('Введите количество проживающих: '))
         cursor.execute("""UPDATE Customers SET number_of_residents=%s WHERE number_LS=%s and indications_date=%s;""",(number_of_residents, number_LS, request_date))
@@ -80,19 +87,21 @@ def Collecting_number_of_residents(number_LS, request_date):
 #вытаскивание количества жильцов из базы
 def Number_residents(number_LS):
     try:
-        cursor.execute("""SELECT * FROM Customers WHERE number_ls='%s' LIMIT 1 ;""",(number_LS,)) #СОРТИРОВКУ ДОБАВИТЬ
+        cursor.execute("""SELECT * FROM Customers WHERE number_ls='%s' ORDER BY indications_date DESC LIMIT 1 OFFSET 1;""",(number_LS,)) 
         datas=cursor.fetchall()
         last_record_DF=pd.DataFrame(datas)
         number_of_residents=last_record_DF[5][0]
-        print(number_of_residents) #УБРАТЬ ПОСЛЕ ПРОВЕРКИ
-    except Exception:
+        cursor.execute("""UPDATE Customers SET number_of_residents=%s WHERE number_LS=%s and indications_date=%s;""",(int(number_of_residents), number_LS, request_date))
+        conn.commit()
+        print('Число жильцов внесено!')
+    except Exception as e:
         conn.rollback()
         print('ошибка!')
-
-Request_data()
-database_record(number_LS,request_date)
-Collecting_data()
-
-cursor.close()
-conn.close()
+        print(e)
+        
+#главная функция для main
+def activation():
+    Request_data()
+    database_record(number_LS,request_date)
+    Collecting_data()
 
