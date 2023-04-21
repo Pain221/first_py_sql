@@ -60,6 +60,7 @@ def Collecting_GVS(number_LS, request_date):
 
 #Cобирает показания ЭЭ
 def Collecting_EE(number_LS, request_date):
+    global indications_EE_daytime, indications_EE_night
     try:
         indications_EE_daytime=int(input('Введите показания ЭЭ с дневной шкалы: '))
         cursor.execute("""UPDATE Customers SET indications_ee_daytime=%s WHERE number_LS=%s and indications_date=%s;""",(indications_EE_daytime, number_LS, request_date))
@@ -87,6 +88,7 @@ def Collecting_number_of_residents(number_LS, request_date):
 
 #вытаскивание количества жильцов из базы
 def Number_residents(number_LS):
+    global number_of_residents
     try:
         cursor.execute("""SELECT * FROM Customers WHERE number_ls='%s' ORDER BY indications_date DESC LIMIT 1 OFFSET 1;""",(number_LS,)) 
         datas=cursor.fetchall()
