@@ -18,8 +18,9 @@ def main_window():
     frame=Frame(window, padx=100, pady=100) #контейнер 
     frame.pack(expand=True) #включена возможность заполнения
 
-#создание первой страницы
-def first_page():
+
+#лист авторизации
+def authorization():
     welcome_text = Label(frame, text='Добро пожаловать!', font = ('Arial', 30)) 
     welcome_text.grid(row = 3, column = 1)
 
@@ -31,6 +32,25 @@ def first_page():
     input_LS.grid(row = 4, column = 2)
     input_LS.focus()
 
+    password_text = Label(frame, text='Пароль : ', font = ('Arial', 10))
+    password_text.grid(row = 5, column = 1)
+
+    input_password = Entry(frame)
+    input_password.grid(row = 5, column = 2)
+
+    def executing():
+        validation_LS(input_LS)
+        authorization_validate(input_LS, input_password)
+
+ 
+    input_buttion_0 = Button(frame,text = 'Ввести', command = executing, height = 5, width = 20)
+    input_buttion_0.grid(row = 6, column = 1)
+
+
+#создание первой страницы
+def first_page():
+    welcome_text = Label(frame, text='Заполните данные: ', font = ('Arial', 30)) 
+    welcome_text.grid(row = 3, column = 1)
 
     #статус кол-ва проживающих
     condition_of_residents_text1 = Label(frame, text='Количество проживающих менялось?', font = ('Arial', 10))
@@ -85,9 +105,7 @@ def first_page():
 
     #обработка ввода
     def Input_process():
-        global number_LS,condition_of_residents, HVS_device, GVS_device, EE_device
-        validation_LS(input_LS)
-        number_LS = int(input_LS.get())
+        global condition_of_residents, HVS_device, GVS_device, EE_device
         database_record(number_LS,request_date)
         condition_of_residents = int(condition_of_residents_input.get())
         HVS_device = int(HVS_device_input.get())
@@ -116,12 +134,43 @@ def validation_LS(input_LS):
 #проверка ввода показаний
 def validation_indications(string_to_valid):
     string=string_to_valid.get()
-    pattern = r'\d{1,}' #не менее одного числа
+    pattern = r'[1-9]\d{0,}' #первый не ноль, а после любое кол-во чисел
     match = re.fullmatch(pattern, str(string))
     if not match:
         error_label = Label(frame, text = 'НЕКОРРЕКТНЫЕ ДАННЫЕ',  font = ('Arial', 10), fg='red')
         error_label.grid(row = 11, column = 1)
         string_to_valid.delete(0, END)
+
+#авторизация
+def authorization_validate(input_LS, input_password):
+    string=int(input_LS.get())
+    try:
+        cursor.execute("""SELECT * FROM Users WHERE number_ls='%s';""",(int(input_LS.get()),)) 
+        datas = cursor.fetchall()
+        user_data_DF = pd.DataFrame(datas)
+        number_LS_DB = user_data_DF[0][0]
+    except:
+        error_label = Label(frame, text = 'НЕКОРРЕКТНЫЙ НОМЕР ЛС',  font = ('Arial', 10), fg='red')
+        error_label.grid(row = 7, column = 1)
+        input_LS.delete(0, END)
+
+    if string != number_LS_DB:
+        error_label = Label(frame, text = 'НЕКОРРЕКТНЫЙ НОМЕР ЛС',  font = ('Arial', 10), fg='red')
+        error_label.grid(row = 7, column = 1)
+        input_LS.delete(0, END)
+    else:
+        string_2=str(input_password.get())
+        password_DB = user_data_DF[1][0]
+        if string_2 != password_DB:
+            error_label = Label(frame, text = 'НЕВЕРНЫЙ ПАРОЛЬ',  font = ('Arial', 10), fg='red')
+            error_label.grid(row = 7, column = 1)
+            input_password.delete(0, END)
+        else:
+            global number_LS
+            number_LS=int(input_LS.get())
+            for widget in frame.winfo_children():
+                widget.destroy()
+            first_page()
 #---------------------------------------------
 
 #создание второй страницы
@@ -169,21 +218,21 @@ def second_page():
     def Collecting_data_gui():
         global indications_EE_daytime, indications_EE_night, indications_HVS, indications_GVS, number_of_residents
         if HVS_device == 1:
-            validation_indications(input_incications_HVS) #
+            validation_indications(input_incications_HVS) 
             indications_HVS = int(input_incications_HVS.get())
             Collecting_HVS(number_LS, request_date, indications_HVS)
         if GVS_device == 1:
-            validation_indications(input_incications_GVS) #
+            validation_indications(input_incications_GVS) 
             indications_GVS = int(input_incications_GVS.get())
             Collecting_GVS(number_LS, request_date, indications_GVS)
         if EE_device == 1:
-            validation_indications(input_indications_EE_daytime) #
-            validation_indications(input_indications_EE_night) #
+            validation_indications(input_indications_EE_daytime) 
+            validation_indications(input_indications_EE_night) 
             indications_EE_daytime = int(input_indications_EE_daytime.get())
             indications_EE_night = int(input_indications_EE_night.get())
             Collecting_EE(number_LS, request_date, indications_EE_daytime, indications_EE_night)
         if condition_of_residents == 1:
-            validation_indications(input_indications_EE_night) # 
+            validation_indications(input_number_of_residents) 
             number_of_residents = int(input_number_of_residents.get())
             Collecting_number_of_residents(number_LS, request_date, number_of_residents)
 
@@ -244,8 +293,12 @@ def third_page():
     total_var = Label(frame, text = ("{:8.2f}".format(cl.total_accrual) + ' рублей!'), font = ('Arial', 10) )
     total_var.grid(row = 9, column = 2)
 
+    #
+    cl.receipt(EE_device)
+
 #главная функция для main
 def manage():
     main_window()
-    first_page()
+    authorization()
     window.mainloop()
+
