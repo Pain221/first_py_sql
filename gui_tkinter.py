@@ -5,6 +5,8 @@ import calculations_with_gui as cl
 from prototype_with_gui import *
 from connections import *
 import re
+import tkinter.filedialog as fd
+import os
 
 request_date=dt.date.today()
 
@@ -172,7 +174,6 @@ def authorization_validate(input_LS, input_password):
                 widget.destroy()
             first_page()
 #---------------------------------------------
-
 #создание второй страницы
 def second_page():
     welcome_text_1 = Label(frame, text = 'Сбор показаний', font = ('Arial', 30)) 
@@ -259,6 +260,15 @@ def second_page():
     input_buttion_2 = Button(frame,text = 'Ввести', command = Collecting_data_gui, height = 5, width = 20)
     input_buttion_2.grid(row = 10, column = 1)
 
+#---------------------------------------------------------
+#сохранение файла
+def save():
+    path = fd.askdirectory()
+    os.chdir(path)
+    path = path + '/receipt.xlsx'
+    cl.receipt(EE_device, path)
+
+#--------------------------------------------------------
 def third_page():
     welcome_text = Label(frame, text = 'Начисления произведены!', font = ('Arial', 30)) 
     welcome_text.grid(row = 3, column = 1)
@@ -293,8 +303,8 @@ def third_page():
     total_var = Label(frame, text = ("{:8.2f}".format(cl.total_accrual) + ' рублей!'), font = ('Arial', 10) )
     total_var.grid(row = 9, column = 2)
 
-    #
-    cl.receipt(EE_device)
+    buttion_save = Button(frame,text = 'Сохранить квитанцию', command = save, height = 5, width = 20)
+    buttion_save.grid(row = 10, column = 1)
 
 #главная функция для main
 def manage():
