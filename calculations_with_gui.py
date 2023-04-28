@@ -1,6 +1,8 @@
 import pandas as pd
 import psycopg2 as pc2
 
+import openpyxl
+
 tariff_data={'service':['HVS', 'GVS', 'EE','EE_daytime', 'EE_night','GVS_heat_carrier', 'GVS_thermal_energy' ],
              'tariff(rub/unit_of_measurement)':[35.78, 158.98, 4.28, 4.9, 2.31, 35.78, 998.69],
              'standard':[4.85, 4.01, 164, '-', '-', 4.01, 0.05349],
@@ -197,10 +199,10 @@ def Total_accrual(number_LS,request_date):
 
 
 #-----------------------
-#квитанция?
-def receipt(EE_device):
+#квитанция
+def receipt(EE_device,path):
     if EE_device == 2:
-        receipt_data_without_EE_device = {#'Квитанция':[номер лс, адрес, дата, ''],
+        receipt_data_without_EE_device = {
                     'Вид услуг':['Холодное водоснабжение', 'Горячее водоснабжение теп. носитель', 'Горячее водоснабжение теп. энергия', 'Электроэнергия','Всего'],
                     'Ед. изм': [standard_frame['tariff(rub/unit_of_measurement)'][0], standard_frame['tariff(rub/unit_of_measurement)'][5], standard_frame['tariff(rub/unit_of_measurement)'][6], standard_frame['tariff(rub/unit_of_measurement)'][2], ''],
                     'Тариф':[standard_frame['tariff(rub/unit_of_measurement)'][0], standard_frame['tariff(rub/unit_of_measurement)'][5], standard_frame['tariff(rub/unit_of_measurement)'][6], standard_frame['tariff(rub/unit_of_measurement)'][2], ''],
@@ -209,8 +211,9 @@ def receipt(EE_device):
                     }
         receipt_DF=pd.DataFrame(receipt_data_without_EE_device)
         print(receipt_DF)
+        receipt_DF.to_excel(path, index = False)
     else:
-        receipt_data_with_EE_device = {#'Квитанция':[номер лс, адрес, дата, ''],
+        receipt_data_with_EE_device = {
                     'Вид услуг':['Холодное водоснабжение', 'Горячее водоснабжение теп. носитель', 'Горячее водоснабжение теп. энергия', 'Электроэнергия','Всего'],
                     'Ед. изм': [standard_frame['units_of_measurement'][0], standard_frame['units_of_measurement'][5], standard_frame['units_of_measurement'][6], standard_frame['units_of_measurement'][2], ''],
                     'Тариф':[standard_frame['tariff(rub/unit_of_measurement)'][0], standard_frame['tariff(rub/unit_of_measurement)'][5], standard_frame['tariff(rub/unit_of_measurement)'][6], '4.9 / 2.31', ''],
@@ -220,3 +223,5 @@ def receipt(EE_device):
 
         receipt_DF=pd.DataFrame(receipt_data_with_EE_device)
         print(receipt_DF)
+        receipt_DF.to_excel(path, index = False)
+
