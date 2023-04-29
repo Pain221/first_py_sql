@@ -1,7 +1,7 @@
 import psycopg2 as pc2
 import pandas as pd
 
-conn=pc2.connect("dbname=komunalka user=postgres password=123 port=5432")
+conn=pc2.connect("dbname=*** user=*** password=*** port=***")
 cursor=conn.cursor()
 
 #внесение в базу показаний ХВС
