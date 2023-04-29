@@ -10,7 +10,7 @@ tariff_data={'service':['HVS', 'GVS', 'EE','EE_daytime', 'EE_night','GVS_heat_ca
              }
 standard_frame = pd.DataFrame(tariff_data)
 
-conn = pc2.connect("dbname=komunalka user=postgres password=123 port=5432")
+conn = pc2.connect("dbname=*** user=*** password=*** port=***")
 cursor = conn.cursor()
 
 #создает в базе запись с номером ЛС и датой
