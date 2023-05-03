@@ -1,8 +1,8 @@
 import pandas as pd
 import psycopg2 as pc2
-
 import openpyxl
 
+#справочные данные
 tariff_data={'service':['HVS', 'GVS', 'EE','EE_daytime', 'EE_night','GVS_heat_carrier', 'GVS_thermal_energy' ],
              'tariff(rub/unit_of_measurement)':[35.78, 158.98, 4.28, 4.9, 2.31, 35.78, 998.69],
              'standard':[4.85, 4.01, 164, '-', '-', 4.01, 0.05349],
@@ -10,30 +10,13 @@ tariff_data={'service':['HVS', 'GVS', 'EE','EE_daytime', 'EE_night','GVS_heat_ca
              }
 standard_frame = pd.DataFrame(tariff_data)
 
+#подключение к базе данных
 conn = pc2.connect("dbname=*** user=*** password=*** port=***")
 cursor = conn.cursor()
 
 #создает в базе запись с номером ЛС и датой
 def database_record_accrual(number_LS,request_date):
     cursor.execute("""INSERT INTO Accruals (number_ls, accrual_date) VALUES (%s, %s);""",(number_LS, request_date))
-
-#определяет какие функции выполнять
-def Execute_calculations(HVS_device, GVS_device, EE_device, number_of_residents, number_LS,request_date):
-    if HVS_device == 2:
-        HVS_without_device(number_of_residents, number_LS, request_date)
-    elif HVS_device == 1:
-        HVS_with_device(number_LS, request_date)
-    if GVS_device==2:
-        GVS_heat_carrier_without_device(number_LS, request_date, number_of_residents)
-    elif GVS_device == 1:
-        GVS_heat_carrier_with_device(number_LS, request_date)
-    GVS_thermal_energy(number_LS, request_date,  volume_of_consumption_GVS_heat_carrier)
-    Total_GVS(number_LS, request_date, accrual_GVS_thermal_energy,accrual_GVS_heat_carrier)
-    if EE_device == 2:
-        EE_without_device(number_LS, request_date, number_of_residents)
-    elif EE_device == 1:
-        EE_with_device(number_LS, request_date)
-    Total_accrual(number_LS,request_date)
 
 #начисления за ХВС без счётчика
 def HVS_without_device(number_of_residents, number_LS, request_date):
@@ -168,8 +151,8 @@ def EE_with_device(number_LS, request_date, indications_EE_daytime, indications_
 
     global accrual_EE, volume_of_consumption_EE
     volume_of_consumption_EE = (indications_EE_daytime - last_indications_EE_daytime) + (indications_EE_night - last_indications_EE_night)
-    volume_of_consumption_daytime=(indications_EE_daytime - last_indications_EE_daytime)
-    volume_of_consumption_night=(indications_EE_night - last_indications_EE_night)
+    volume_of_consumption_daytime = (indications_EE_daytime - last_indications_EE_daytime)
+    volume_of_consumption_night = (indications_EE_night - last_indications_EE_night)
 
     accrual_daytime = volume_of_consumption_daytime * standard_frame['tariff(rub/unit_of_measurement)'][3]
     accrual_night = volume_of_consumption_night * standard_frame['tariff(rub/unit_of_measurement)'][4]
@@ -198,7 +181,7 @@ def Total_accrual(number_LS,request_date):
         print(e)
 
 
-#-----------------------
+#------------------------------------------------------------------------------------------------------
 #квитанция
 def receipt(EE_device,path):
     if EE_device == 2:
@@ -224,4 +207,3 @@ def receipt(EE_device,path):
         receipt_DF=pd.DataFrame(receipt_data_with_EE_device)
         print(receipt_DF)
         receipt_DF.to_excel(path, index = False)
-
